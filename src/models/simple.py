@@ -3,7 +3,7 @@ from typing import Any, List
 
 import torch
 from pytorch_lightning import LightningModule
-from pytorch_lightning.metrics.classification import Accuracy
+from torchmetrics.classification import Accuracy
 from torch import nn
 
 
@@ -28,7 +28,7 @@ class SimpleModel(LightningModule):
 
         self.lin1 = nn.Linear(
             self.hparams['input_size'], self.hparams['lin1_size'])
-        # self.bn = nn.BatchNorm1d(self.hparams['lin1_size'])
+        self.bn = nn.BatchNorm1d(self.hparams['lin1_size'])
         self.relu = nn.ReLU()
         self.lin2 = nn.Linear(
             self.hparams['lin1_size'], self.hparams['output_size'])
@@ -37,9 +37,9 @@ class SimpleModel(LightningModule):
 
         # use separate metric instance for train, val and test step
         # to ensure a proper reduction over the epoch
-        self.train_accuracy = Accuracy()
-        self.val_accuracy = Accuracy()
-        self.test_accuracy = Accuracy()
+        self.train_accuracy = Accuracy(task="multiclass",num_classes=10)
+        self.val_accuracy = Accuracy(task="multiclass",num_classes=10)
+        self.test_accuracy = Accuracy(task="multiclass",num_classes=10)
 
         self.metric_hist = {
             'train/acc': [],
@@ -76,7 +76,7 @@ class SimpleModel(LightningModule):
 
         return {'loss': loss, 'preds': preds, 'targets': targets}
 
-    def training_epoch_end(self, outputs: List[Any]):
+    def on_train_epoch_end(self):
         # log best so far train acc and train loss
         self.metric_hist['train/acc'].append(
             self.trainer.callback_metrics['train/acc'])
@@ -98,7 +98,7 @@ class SimpleModel(LightningModule):
 
         return {'loss': loss, 'preds': preds, 'targets': targets}
 
-    def validation_epoch_end(self, outputs: List[Any]):
+    def on_validation_epoch_end(self):
         # log best so far val acc and val loss
         self.metric_hist['val/acc'].append(
             self.trainer.callback_metrics['val/acc'])
@@ -120,7 +120,7 @@ class SimpleModel(LightningModule):
 
         return {'loss': loss, 'preds': preds, 'targets': targets}
 
-    def test_epoch_end(self, outputs: List[Any]):
+    def on_test_epoch_end(self, outputs: List[Any]=None):
         pass
 
     def configure_optimizers(self):

@@ -2,19 +2,22 @@
 
 # default configuration for evaluation
 defaults:
-    - logger: mlflow.yaml
-    - trainer: default_trainer.yaml
     # add further config for evaluation
-
+    - trainer: default_trainer.yaml
+    - datamodule: mnist_datamodule.yaml
+    - callbacks: default_callbacks.yaml
+    - logger: mlflow.yaml
 logger:
     mlflow:
       tags:
         stage: eval
 
+
 work_dir: ${hydra:runtime.cwd}
 data_dir: ${work_dir}/data/
+run_name: ${now:%Y-%m-%d_%H-%M-%S}
+log_dir: logs/runs/${logger.mlflow.experiment_name}/${run_name}
 
-log_dir: logs/runs/${logger.mlflow.experiment_name}/eval/${now:%H-%M-%S}
 
 disable_warnings: True
 
@@ -23,5 +26,5 @@ hydra:
     run:
         dir: ${log_dir}
     sweep:
-        dir: logs/multiruns/${now:%Y-%m-%d_%H-%M-%S}
+        dir: logs/multiruns/${run_name}
         subdir: ${hydra.job.num}

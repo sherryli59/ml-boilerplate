@@ -1,0 +1,67 @@
+# @package _global_
+
+# to execute this experiment run:
+# python main.py +experiment=lj
+
+defaults:
+    - /nn@model.score.nn: vectorfield.yaml
+    - override /datamodule: custom_datamodule.yaml
+
+sample:
+  nsamples : 500
+  return_prob : False
+  return_traj : True
+  method : ode
+
+seed: 42
+
+device: cuda:0
+
+trainer:
+  max_epochs: 3
+
+logger:
+    mlflow:
+      experiment_name: "LJ"
+
+datamodule:
+  data_path: /home/sherryli/xsli/GenerativeModel/data/lj/liquid_3d/nonperiodic/lj_20_3d_3.0box_T1.00/pos_train.npy
+  test_data_path: /home/sherryli/xsli/GenerativeModel/data/lj/liquid_3d/nonperiodic/lj_20_3d_3.0box_T1.00/pos_test.npy
+  distribution:
+    _target_: gen.simulations.lj.LJ  
+    boxlength : 5.42
+    cutoff : 5.0
+    periodic : False
+    sigma : 1.0
+    epsilon : 1.0
+    shift : True
+
+
+model:
+  _target_: gen.diffusion.diffusion.DiffusionModel
+  lr : 3e-4
+  device : cuda
+  shape : [20,3]
+
+  sde :
+    _target_: gen.diffusion.sde.PiecewiseSDE
+    #type :  [VP_SDE]
+    schedule : linear
+    kT : 1.0
+    translation_inv : True
+    device : ${device}
+    #type : [GeneralSDE, VP_SDE]
+    #knots : [0.2]
+    friction : 10.0
+    data_handler : ${datamodule}
+
+  score:
+    _target_: gen.diffusion.score.Score
+    correction:
+      _target_: gen.diffusion.score.Correction
+      data_handler : ${datamodule}
+      # from 0 to ${duration}: gradually decrease the force correction;
+      # from ${duration} to 1: gradually increase the linear correction
+      duration : 0.0
+    single_nn : True # if False, use a separate nn for each segment of the SDE. Needed only when the SDE is piecewise
+    sde : ${model.sde} 

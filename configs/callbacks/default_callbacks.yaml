@@ -1,6 +1,6 @@
 model_checkpoint:
     _target_: pytorch_lightning.callbacks.ModelCheckpoint
-    monitor: "val/acc"
+    monitor: "val/loss"
     save_top_k: 1
     save_last: True
     mode: "max"
@@ -10,7 +10,7 @@ model_checkpoint:
 
 early_stopping:
     _target_: pytorch_lightning.callbacks.EarlyStopping
-    monitor: "val/acc"
+    monitor: "val/loss"
     patience: 100
     mode: "max"
     min_delta: 0

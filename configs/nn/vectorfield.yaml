@@ -1,0 +1,4 @@
+_target_ : gen.nn.vectorfield.VectorField
+hidden_dim : 1000
+cutoff : 6.5
+shape: ${model.shape}

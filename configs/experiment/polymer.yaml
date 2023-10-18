@@ -1,0 +1,54 @@
+# @package _global_
+
+# to execute this experiment run:
+# python main.py +experiment=polymer
+
+mode : train # train, test or sample
+
+defaults:
+    - override /trainer: default_trainer.yaml
+    - override /datamodule: custom_datamodule.yaml
+    - override /callbacks: default_callbacks.yaml
+
+seed: 42
+
+device: "cuda"
+
+trainer:
+  max_epochs: 1 
+
+logger:
+    mlflow:
+      experiment_name: "LJ"
+
+model:
+  _target_: nf.nf.NormalizingFlowModel
+  type : nf
+  flow :
+    type : autoregressive
+  representation : 
+    num_blocks : 3
+    hidden_dim : 500
+
+  prior :
+    type : Normal
+    shape : (50,3)
+    std : 1.0
+
+
+distribution:
+  dim : 3
+  nparticles: 50
+  shape : [50,3]
+  boxlength : 5.42
+  cutoff : 5.0
+  kT : 1.0
+  periodic : False
+  translation_inv : True
+  sigma : 1.0
+  epsilon : 1.0
+  shift : True
+
+datamodule:
+  data_path: /home/sherryli/xsli/GenerativeModel/data/lj/liquid_3d/nonperiodic/lj_50_3d_3.0box_T1.00/pos_train.npy
+  test_data_path: /home/sherryli/xsli/GenerativeModel/data/lj/liquid_3d/nonperiodic/lj_50_3d_3.0box_T1.00/pos_test.npy

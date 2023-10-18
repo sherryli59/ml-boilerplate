@@ -7,6 +7,7 @@
 import logging
 import warnings
 from typing import List
+import os
 
 import pytorch_lightning as pl
 from omegaconf import DictConfig, OmegaConf
@@ -58,10 +59,15 @@ def extras(config: DictConfig) -> None:
             config.datamodule.num_workers = 0
         if config.datamodule.get("pin_memory"):
             config.datamodule.pin_memory = False
+    # save config
+    
+    
+    #OmegaConf.save(config=config, f= "config.yaml")
 
     # disable adding new keys to config
     OmegaConf.set_struct(config, True)
-
+    
+    
 
 def log_hyperparameters(
     config: DictConfig,
@@ -69,7 +75,7 @@ def log_hyperparameters(
     datamodule: pl.LightningDataModule,
     trainer: pl.Trainer,
     callbacks: List[pl.Callback],
-    logger: List[pl.loggers.LightningLoggerBase],
+    logger: List[pl.loggers.Logger]
 ) -> None:
     """This method controls which parameters from Hydra config are saved by Lightning loggers.
     Additionaly saves:
@@ -81,7 +87,7 @@ def log_hyperparameters(
         datamodule (pl.LightningDataModule): [description]
         trainer (pl.Trainer): [description]
         callbacks (List[pl.Callback]): [description]
-        logger (List[pl.loggers.LightningLoggerBase]): [description]
+        logger (List[pl.loggers.Logger]): [description]
     """
 
     hparams = {}

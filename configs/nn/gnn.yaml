@@ -1,0 +1,3 @@
+_target_ : gen.nn.egnn.EGNN
+hidden_dim : 500
+n_layers : 3
