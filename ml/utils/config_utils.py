@@ -8,7 +8,7 @@ import logging
 import warnings
 from typing import List
 import os
-
+import hydra
 import pytorch_lightning as pl
 from omegaconf import DictConfig, OmegaConf
 
@@ -112,7 +112,8 @@ def log_hyperparameters(
     hparams["model/params_not_trainable"] = sum(
         p.numel() for p in model.parameters() if not p.requires_grad
     )
-    hparams["hydra/log_dir"] = config["log_dir"]
+    hydra_cfg = hydra.core.hydra_config.HydraConfig.get()
+    hparams["hydra/log_dir"] = hydra_cfg['runtime']['output_dir']
 
     # send hparams to all loggers
     trainer.logger.log_hyperparams(hparams)

@@ -3,13 +3,14 @@ from typing import List, Optional
 from pytorch_lightning import LightningModule, LightningDataModule, Callback, Trainer
 from pytorch_lightning.loggers import Logger
 from pytorch_lightning import seed_everything
+from pytorch_lightning.strategies import DDPStrategy
 from hydra.utils import instantiate
 from omegaconf import DictConfig
 from mlflow.tracking.context import registry as context_registry
 from mlflow.utils.mlflow_tags import MLFLOW_RUN_NAME
 
-from src.eval import eval
-from src.utils import config_utils
+from ml.eval import eval
+from ml.utils import config_utils
 
 log = logging.getLogger(__name__)
 
@@ -27,12 +28,6 @@ def train(config: DictConfig, model: Optional[LightningModule]=None,
     if 'seed' in config:
         seed_everything(config.seed, workers=True)
 
-    # setup target distribution (if any)
-    # if 'distribution' in config and "_target_" in config.distribution and config.distribution._target_ != "":
-    #     log.info(f'Instantiating distribution <{config.distribution._target_}>')
-    #     distribution = instantiate(config.distribution)
-    # else:
-    #     distribution = None
     # setup data module
     log.info(f'Instantiating datamodule <{config.datamodule._target_}>')
     datamodule: LightningDataModule = instantiate(config.datamodule)
@@ -40,15 +35,6 @@ def train(config: DictConfig, model: Optional[LightningModule]=None,
     # setup model
     log.info(f'Instantiating model <{config.model._target_}>')
     model: LightningModule = instantiate(config.model)
-
-
-    # setup callbacks
-    callbacks: List[Callback] = []
-    if 'callbacks' in config:
-        for _, cb_conf in config['callbacks'].items():
-            if '_target_' in cb_conf:
-                log.info(f'Instantiating callback <{cb_conf._target_}>')
-                callbacks.append(instantiate(cb_conf))
 
     # setup logger
     logger: List[Logger] = []
@@ -66,11 +52,24 @@ def train(config: DictConfig, model: Optional[LightningModule]=None,
                     pl_logger = instantiate(lg_conf)
                 logger.append(pl_logger)
 
+    # setup callbacks
+    callbacks: List[Callback] = []
+    if 'callbacks' in config:
+        for _, cb_conf in config['callbacks'].items():
+            if '_target_' in cb_conf:
+                log.info(f'Instantiating callback <{cb_conf._target_}>')
+                if cb_conf['_target_'] == 'ml.utils.mlflow_utils.MLFlowModelCheckpoint':
+                    print(mlf_logger)
+                    callbacks.append(instantiate(cb_conf,mlf_logger=mlf_logger))
+                else:
+                    callbacks.append(instantiate(cb_conf))
+
     # Init Lightning trainer
     log.info(f'Instantiating trainer <{config.trainer._target_}>')
     trainer: Trainer = instantiate(
         config.trainer, callbacks=callbacks, logger=logger, _convert_='partial',
-        num_sanity_val_steps=0
+        num_sanity_val_steps=0,
+       strategy=DDPStrategy(find_unused_parameters=True)
     )
 
     # Send some parameters from config to all lightning loggers
@@ -108,3 +107,6 @@ def train(config: DictConfig, model: Optional[LightningModule]=None,
     # Print path to best checkpoint
     log.info(
         f'Best checkpoint path:\n{trainer.checkpoint_callback.best_model_path}')
+
+    mlf_logger.experiment.log_param(
+        trainer.checkpoint_callback.best_model_path, "ml-flow/run_id", mlf_logger._run_id)

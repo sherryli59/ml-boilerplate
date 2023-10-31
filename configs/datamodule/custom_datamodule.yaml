@@ -1,4 +1,4 @@
-_target_: src.datamodules.custom.DataHandler
+_target_: ml.datamodules.custom.DataHandler
 
 data_dir: ${data_dir}
 data_path: ${data_dir}/train_data.npy

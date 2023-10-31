@@ -1,11 +1,24 @@
 # @package _global_
 
 # to execute this experiment run:
-# python main.py +experiment=dw
+# python main.py +experiment=dw run_name=${run_name}
 
 defaults:
-    - /nn@model.score.nn: mlp.yaml
+    - /nn@model.score.nn: gnn.yaml
+    #- override /hydra/launcher: submitit_slurm
     - override /datamodule: custom_datamodule.yaml
+
+# hydra:
+#   sweeper:
+#     params:
+#       model.sde.friction: 5,10
+  # launcher:
+  #   account: m4235
+  #   constraint: gpu
+  #   gpus_per_node: 4
+  #   name: ${logger.mlflow.experiment_name}
+  #   nodes: 1
+  #   qos: regular
 
 sample:
   nsamples : 500
@@ -14,18 +27,17 @@ sample:
   method : ode
 
 seed: 42
-device: cuda:0
 
 trainer:
-  max_epochs: 10
+  max_epochs: 2
 
 logger:
     mlflow:
       experiment_name: "DW"
 
 datamodule:
-  data_path: /mnt/ssd/MCMC/mcmc/data/dw_train.npy
-  test_data_path: /mnt/ssd/MCMC/mcmc/data/dw_test.npy
+  data_path: /global/cfs/cdirs/m4235/sherry/MCMC/mcmc/data/dw_train.npy
+  test_data_path: /global/cfs/cdirs/m4235/sherry/MCMC/mcmc/data/dw_test.npy
   distribution:
     _target_: mcmc.distributions.double_well.DW  
     nparticles: 4
@@ -34,25 +46,21 @@ datamodule:
     b : -4
     c : 0.9
     offset : 4
-    device : ${device}
 
 model:
   _target_: gen.diffusion.diffusion.DiffusionModel
   lr : 3e-4
-  device : cuda
   shape : [4,2]
 
   sde :
     _target_: gen.diffusion.sde.PiecewiseSDE
-    type :  [VP_SDE]
     schedule : linear
     kT : 1.0
     translation_inv : True
-    device : ${device}
     data_handler : ${datamodule}
-    #type : [GeneralSDE, VP_SDE]
-    #knots : [0.2]
-    #friction : 10.0
+    type : [GeneralSDE, VP_SDE]
+    knots : [0.2]
+    friction : 10.0
 
   score:
     _target_: gen.diffusion.score.Score
@@ -61,9 +69,10 @@ model:
       data_handler : ${datamodule}
       # from 0 to ${duration}: gradually decrease the force correction;
       # from ${duration} to 1: gradually increase the linear correction
-      duration : 0.1
+      duration : 0.0
     single_nn : True # if False, use a separate nn for each segment of the SDE. Needed only when the SDE is piecewise
     sde : ${model.sde} 
 
   data_handler : ${datamodule}
+
 

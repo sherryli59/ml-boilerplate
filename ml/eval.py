@@ -7,7 +7,7 @@ from pytorch_lightning import seed_everything
 import matplotlib.pyplot as plt
 from omegaconf import DictConfig
 
-from src.utils import config_utils
+from ml.utils import config_utils
 
 log = logging.getLogger(__name__)
 
@@ -36,16 +36,18 @@ def eval(config: DictConfig, model: LightningModule, trainer: Trainer, datamodul
     if 'seed' in config:
         seed_everything(config.seed)
 
+    model._device = trainer.strategy.root_device
+
     # Send some parameters from config to all lightning loggers
-    log.info('Logging hyperparameters!')
-    config_utils.log_hyperparameters(
-        config=config,
-        model=model,
-        datamodule=datamodule,
-        trainer=trainer,
-        callbacks=[],
-        logger=trainer.logger,
-    )
+    # log.info('Logging hyperparameters!')
+    # config_utils.log_hyperparameters(
+    #     config=config,
+    #     model=model,
+    #     datamodule=datamodule,
+    #     trainer=trainer,
+    #     callbacks=[],
+    #     logger=trainer.logger,
+    # )
     # add your evaluation logic here
     #trainer.test(model=model, datamodule=datamodule)
     out = model.sample(**config.sample)

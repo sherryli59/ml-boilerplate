@@ -3,7 +3,7 @@ from hydra.utils import instantiate, get_class
 from omegaconf import DictConfig, OmegaConf
 import torch
 
-def load_experiment(config, path: str, checkpoint: str = 'last.ckpt'):
+def load_experiment(config, log_dir: str, checkpoint: str):
     """
       Loads an existing model and its dataloader.
 
@@ -12,16 +12,15 @@ def load_experiment(config, path: str, checkpoint: str = 'last.ckpt'):
         checkpoint (string): the name of the checkpoint file
     """
     # load conf
-    #config: DictConfig = OmegaConf.load(path + '/.hydra/config.yaml')
+    config: DictConfig = OmegaConf.load(log_dir + '/.hydra/config.yaml')
     # reinitialize model and datamodule
-    model = get_class(config.model._target_)
+    #model = get_class(config.model._target_)
     datamodule: LightningDataModule = instantiate(config.datamodule)
     datamodule.setup()
     if "seed" in config:
         seed_everything(config.seed)
     model:LightningModule = instantiate(config.model)
-    checkpoint_model = torch.load(path + '/checkpoints/' + checkpoint)
+    checkpoint_model = torch.load(checkpoint)
     model.load_state_dict(checkpoint_model["state_dict"])
-    #model = model.load_from_checkpoint(path + '/checkpoints/' + checkpoint,data_handler=datamodule)
-    model = model.to(config.device)
+    #model = model.load_from_checkpoint(checkpoint,data_handler=datamodule)
     return model, datamodule, config
