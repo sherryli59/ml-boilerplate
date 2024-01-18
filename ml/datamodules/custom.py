@@ -24,12 +24,12 @@ class DataHandler(LightningDataModule):
     ):
         super().__init__()
         self.distribution = distribution
-        print("data_path:",data_path)
+        print("data_path",data_path)
         if data_path is not None:
             self.dataset = TrajData(data_path=data_path)
         elif distribution is not None:
-            self.dataset = LiveSimulation(distribution=distribution)
-            self.dataset_test = LiveSimulation(distribution=distribution)
+            self.dataset = LiveSimulation(distribution=distribution, batch_size=batch_size)
+            self.dataset_test = LiveSimulation(distribution=distribution,batch_size=batch_size)
         if test_data_path is not None:
             self.dataset_test = TrajData(data_path=test_data_path)
         self.train_val_split = train_val_split
@@ -112,20 +112,42 @@ class TrajData(Dataset):
         if self.flattening:
             traj = traj.reshape(len(traj),-1)
         return traj
-    
+
+class SplitTrajData(TrajData):
+    def __init__(self, context_dim=0,random_split=False, data_path=None, encoder=None, flattening=False,**kwargs):
+        super().__init__(data_path=data_path, encoder=encoder, flattening=flattening,**kwargs)
+        self.context_dim = context_dim
+        self.random_split = random_split
+
+    def __getitem__(self, idx):
+        data = self.traj[idx]
+        if self.encoder is not None:
+            data = self.encoder(torch.tensor(data))
+        if self.context_dim > 0:
+            if self.random_split:
+                rand_idx = torch.randperm(data.shape[1])
+                context = data[:,rand_idx[:self.context_dim]]
+                data = data[:,rand_idx[self.context_dim:]]
+            else:
+                context = data[:self.context_dim]
+                data = data[self.context_dim:]
+            return data, context
+        else:
+            return data
+
 class LiveSimulation(Dataset):
     def __init__(self, distribution, batch_size=100,
-                  nbatches_per_epoch=1000, flattening=False,**kwargs):
+                  nbatches_per_epoch=500, flattening=False,**kwargs):
         self.flattening = flattening
         self.distribution = distribution
         self.nbatches_per_epoch = nbatches_per_epoch
         self.batch_size = batch_size
         
     def __len__(self):
-        return self.nbatches_per_epoch
+        return self.nbatches_per_epoch*self.batch_size
     
     def __getitem__(self, idx):    
-        data = self.distribution.sample(self.batch_size)
+        data = self.distribution.sample(1).squeeze(0)
         data = torch.tensor(data)
         if self.flattening:
             data = data.reshape(self.batch_size,-1)

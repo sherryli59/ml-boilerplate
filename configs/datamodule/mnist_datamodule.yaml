@@ -1,4 +1,4 @@
-_target_: src.datamodules.mnist.MNISTDataModule
+_target_: ml.datamodules.mnist.MNISTDataModule
 
 data_dir: ${data_dir}
 batch_size: 64

@@ -1,0 +1,50 @@
+# @package _global_
+
+# to execute this experiment run:
+# python main.py +experiment=cifar10
+
+defaults:
+    - /nn@model.score.nn: unet.yaml
+    - override /datamodule: custom_datamodule.yaml
+
+sample:
+  nsamples : 500
+  return_prob : False
+  return_traj : True
+  method : p-c
+
+seed: 42
+
+device: cuda:0
+
+
+datamodule:
+  batch_size: 32
+  data_path: /mnt/ssd/ml-boilerplate/data/polymer/data_div_by_5.npy
+  test_data_path: /mnt/ssd/ml-boilerplate/data/polymer/data_div_by_5.npy
+
+  
+trainer:
+  max_epochs: 40
+
+logger:
+    mlflow:
+      experiment_name: "Polymer"
+
+
+model:
+  _target_: gen.diffusion.diffusion.DiffusionModel
+  lr : 3e-4
+  shape : [2,64,64]
+
+  sde :
+    _target_: gen.diffusion.sde.PiecewiseSDE
+    type :  [VP_SDE]
+    schedule : linear
+    translation_inv : False
+
+  score:
+    _target_: gen.diffusion.score.Score
+    sde : ${model.sde}
+    nn : 
+      channels : 2

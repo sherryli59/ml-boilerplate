@@ -1,4 +1,4 @@
 _target_ : gen.nn.mlp.TimeEmbeddedMLP
-hidden_dim : 500
+hidden_dim : 2000
 n_layers : 3
 shape: ${model.shape}

@@ -4,11 +4,11 @@
 # python main.py +experiment=lj
 
 defaults:
-    - /nn@model.score.nn: vectorfield.yaml
+    - /nn@model.score.nn: transformer.yaml
     - override /datamodule: custom_datamodule.yaml
 
 sample:
-  nsamples : 500
+  nsamples : 100
   return_prob : False
   return_traj : True
   method : ode
@@ -18,20 +18,20 @@ seed: 42
 device: cuda:0
 
 trainer:
-  max_epochs: 3
+  max_epochs: 1
 
 logger:
     mlflow:
-      experiment_name: "LJ"
+      experiment_name: "LJ_periodic"
 
 datamodule:
-  data_path: /home/sherryli/xsli/GenerativeModel/data/lj/liquid_3d/nonperiodic/lj_20_3d_3.0box_T1.00/pos_train.npy
-  test_data_path: /home/sherryli/xsli/GenerativeModel/data/lj/liquid_3d/nonperiodic/lj_20_3d_3.0box_T1.00/pos_test.npy
+  data_path: /home/sherryli/xsli/GenerativeModel/data/lj/liquid_3d/periodic/lj_20_3d_5.0box_T1.15/pos_train.npy
+  test_data_path: /home/sherryli/xsli/GenerativeModel/data/lj/liquid_3d/periodic/lj_20_3d_5.0box_T1.15/pos_test.npy
   distribution:
     _target_: gen.simulations.lj.LJ  
-    boxlength : 5.42
+    boxlength : 5.0
     cutoff : 5.0
-    periodic : False
+    periodic : True
     sigma : 1.0
     epsilon : 1.0
     shift : True
@@ -40,19 +40,18 @@ datamodule:
 model:
   _target_: gen.diffusion.diffusion.DiffusionModel
   lr : 3e-4
-  device : cuda
   shape : [20,3]
 
   sde :
     _target_: gen.diffusion.sde.PiecewiseSDE
-    #type :  [VP_SDE]
     schedule : linear
-    kT : 1.0
-    translation_inv : True
-    device : ${device}
-    type : [GeneralSDE, VP_SDE]
+    kT : 1
+    translation_inv : False
+    periodic_boxlen : 5.0
+    D : 1
+    type : [GeneralSDE, ToroidalDiffusion]
     knots : [0.2]
-    friction : 10.0
+    friction : 15.0
     data_handler : ${datamodule}
 
   score:

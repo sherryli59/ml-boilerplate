@@ -109,4 +109,4 @@ def train(config: DictConfig, model: Optional[LightningModule]=None,
         f'Best checkpoint path:\n{trainer.checkpoint_callback.best_model_path}')
 
     mlf_logger.experiment.log_param(
-        trainer.checkpoint_callback.best_model_path, "ml-flow/run_id", mlf_logger._run_id)
+        trainer.checkpoint_callback.best_model_path, "ml-flow/best_model_path", mlf_logger._run_id)

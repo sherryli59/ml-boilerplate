@@ -1,26 +1,25 @@
 # @package _global_
 
 # to execute this experiment run:
-# python main.py +experiment=polymer
+# python main.py +experiment=cifar10
 
 defaults:
     - override /datamodule: custom_datamodule.yaml
 
 sample:
-  nsamples : 32
-  return_prob : False
-  return_traj : True
-  method : p-c
+  nsamples : 10
 
 seed: 42
 
 device: cuda:0
+
 
 datamodule:
   batch_size: 32
   data_path: /mnt/ssd/ml-boilerplate/data/polymer/polymer_field.npy
   test_data_path: /mnt/ssd/ml-boilerplate/data/polymer/polymer_field.npy
 
+  
 trainer:
   max_epochs: 40
 
@@ -30,6 +29,13 @@ logger:
 
 
 model:
-  _target_: diffmodel.diffusion.DiffusionModel
-  channels : 2
-  lr : 1e-4
+  _target_: nf.nf.NormalizingFlow
+  lr : 3e-4
+  weight_decay : 1e-5
+  
+  shape : [2,32,32]
+    
+  flow:
+    _target_: nf.flows.autoregressive.RQSAutoregressive
+    features : 2048
+    tail_bound : 0.45

@@ -1,0 +1,44 @@
+# @package _global_
+
+# to execute this experiment run:
+# python main.py +experiment=cifar10
+
+defaults:
+    - /nn@model.score.nn: unet.yaml
+    - override /datamodule: mnist_datamodule.yaml
+
+sample:
+  nsamples : 64
+  return_prob : False
+  return_traj : True
+  method : p-c
+
+seed: 42
+
+device: cuda:0
+
+datamodule:
+  batch_size: 32
+
+trainer:
+  max_epochs: 50
+
+logger:
+    mlflow:
+      experiment_name: "MNIST"
+
+
+model:
+  _target_: gen.diffusion.diffusion.DiffusionModel
+  lr : 3e-4
+  shape : [1,28,28]
+
+  sde :
+    _target_: gen.diffusion.sde.PiecewiseSDE
+    type :  [VP_SDE]
+    schedule : linear
+    translation_inv : False
+
+  score:
+    _target_: gen.diffusion.score.Score
+    sde : ${model.sde}

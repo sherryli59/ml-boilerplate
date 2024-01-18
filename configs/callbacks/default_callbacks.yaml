@@ -4,7 +4,7 @@ model_checkpoint:
     monitor: "val/loss"
     save_top_k: 5
     save_last: True
-    mode: "max"
+    mode: "min"
     verbose: False
     dirpath: 'checkpoints/'
     filename: '{epoch:02d}'
@@ -13,5 +13,5 @@ early_stopping:
     _target_: pytorch_lightning.callbacks.EarlyStopping
     monitor: "val/loss"
     patience: 100
-    mode: "max"
+    mode: "min"
     min_delta: 0

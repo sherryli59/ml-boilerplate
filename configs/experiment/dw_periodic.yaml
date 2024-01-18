@@ -16,22 +16,22 @@ defaults:
 
 sample:
   nsamples : 100
-  return_prob : False
+  return_prob : True
   return_traj : True
   method : ode
 
 seed: 42
 
 trainer:
-  max_epochs: 10
+  max_epochs: 5
 
 logger:
     mlflow:
       experiment_name: "DW"
 
 datamodule:
-  data_path:  /mnt/ssd/MCMC/mcmc/data/dw_train_short.npy
-  test_data_path:  /mnt/ssd/MCMC/mcmc/data/dw_test.npy
+  data_path:  /mnt/ssd/MCMC/mcmc/data/dw_periodic_long.npy
+  test_data_path:  /mnt/ssd/MCMC/mcmc/data/dw_periodic.npy
   distribution:
     _target_: mcmc.distributions.double_well.DW  
     nparticles: 4
@@ -40,6 +40,7 @@ datamodule:
     b : -4
     c : 0.9
     offset : 4
+    boxlen : 10
 
 model:
   _target_: gen.diffusion.diffusion.DiffusionModel
@@ -47,14 +48,21 @@ model:
   shape : [4,2]
 
   sde :
+    # _target_: gen.diffusion.sde.ToroidalDiffusion
+    # schedule : linear
+    # #kT : 1
+    # translation_inv : True
+    # periodic_boxlen : 10.0
+    # data_handler : ${datamodule}
+
     _target_: gen.diffusion.sde.PiecewiseSDE
     schedule : linear
     kT : 1.0
-    translation_inv : True
+    periodic_boxlen : 10.0
+    translation_inv : False
     data_handler : ${datamodule}
-    #type : [GeneralSDE, VP_SDE]
-    #knots : [0.2]
-    type : [VP_SDE]
+    type : [GeneralSDE, ToroidalDiffusion]
+    knots : [0.2]
     friction : 10.0
 
   score:

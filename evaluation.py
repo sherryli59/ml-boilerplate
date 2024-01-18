@@ -50,8 +50,7 @@ def main(config: DictConfig):
     log_dir = run['data']['params']['hydra/log_dir']
     print("log directory:", log_dir)
     #log_dir = utils.get_original_cwd() + '/' + log_dir
-    model, datamodule, exp_config = model.load_experiment(params,log_dir=log_dir,checkpoint=model_path)
-
+    model, datamodule, exp_config = model.load_experiment(log_dir=log_dir,checkpoint=model_path)
     user_specified_tags = {}  
     user_specified_tags[MLFLOW_RUN_NAME] = config.run_name+"_eval"
     tags = context_registry.resolve_tags(user_specified_tags)

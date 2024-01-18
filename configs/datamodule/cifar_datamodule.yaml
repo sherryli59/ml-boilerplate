@@ -1,4 +1,4 @@
-_target_: src.datamodules.cifar10.CIFAR10DataModule
+_target_: ml.datamodules.cifar10.CIFAR10DataModule
 
 data_dir: ${data_dir}
 batch_size: 64

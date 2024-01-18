@@ -1,10 +1,10 @@
 # @package _global_
 
 # to execute this experiment run:
-# python main.py +experiment=polymer
+# python main.py +experiment=cifar10
 
 defaults:
-    - override /datamodule: custom_datamodule.yaml
+    - override /datamodule: cifar_datamodule.yaml
 
 sample:
   nsamples : 32
@@ -18,18 +18,16 @@ device: cuda:0
 
 datamodule:
   batch_size: 32
-  data_path: /mnt/ssd/ml-boilerplate/data/polymer/polymer_field.npy
-  test_data_path: /mnt/ssd/ml-boilerplate/data/polymer/polymer_field.npy
 
 trainer:
   max_epochs: 40
 
 logger:
     mlflow:
-      experiment_name: "Polymer"
+      experiment_name: "MNIST"
 
 
 model:
   _target_: diffmodel.diffusion.DiffusionModel
-  channels : 2
-  lr : 1e-4
+  lr : 3e-4
+  channels : 3

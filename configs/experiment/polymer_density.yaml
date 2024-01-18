@@ -1,0 +1,35 @@
+# @package _global_
+
+# to execute this experiment run:
+# python main.py +experiment=cifar10
+
+defaults:
+    - /nn@model.nn: unet.yaml
+    - override /datamodule: custom_datamodule.yaml
+
+seed: 42
+
+device: cuda:0
+
+
+datamodule:
+  batch_size: 32
+  data_path: /mnt/ssd/ml-boilerplate/data/polymer/polymer_field_w_density_new.npy
+  test_data_path: /mnt/ssd/ml-boilerplate/data/polymer/polymer_field_w_density_test_new.npy
+
+  
+trainer:
+  max_epochs: 20
+
+logger:
+    mlflow:
+      experiment_name: "Polymer"
+
+
+model:
+  _target_: polymer_ml.predict_density.DensityPredictor
+  lr : 3e-4
+
+  nn : 
+    channels : 2
+    with_time_emb : False
