@@ -1,0 +1,61 @@
+# @package _global_
+
+# to execute this experiment run:
+# python main.py +experiment=lj
+
+defaults:
+    - /nn@model.score.nn: schnet.yaml
+    - override /datamodule: custom_datamodule.yaml
+
+sample:
+  nsamples : 100
+  return_prob : False
+  return_traj : True
+  method : e-m
+
+seed: 42
+
+device: cuda:0
+
+trainer:
+  max_epochs: 1
+
+logger:
+    mlflow:
+      experiment_name: "LJ_periodic"
+
+datamodule:
+  data_path: /home/sherryli/xsli/GenerativeModel/data/lj/liquid_3d/periodic/lj_20_3d_5.0box_T1.15/pos_train.npy
+  test_data_path: /home/sherryli/xsli/GenerativeModel/data/lj/liquid_3d/periodic/lj_20_3d_5.0box_T1.15/pos_test.npy
+  distribution:
+    _target_: gen.simulations.lj.LJ  
+    boxlength : 5.0
+    cutoff : 5.0
+    periodic : True
+    sigma : 1.0
+    epsilon : 1.0
+    shift : True
+
+
+model:
+  _target_: gen.diffusion.diffusion.DiffusionModel
+  lr : 3e-4
+  shape : [20,3]
+
+  sde :
+    _target_: gen.diffusion.sde.ToroidalDiffusion
+    schedule : linear
+    kT : 1.15
+    translation_inv : False
+    periodic_boxlen : ${datamodule.distribution.boxlength}
+
+  score:
+    _target_: gen.diffusion.score.Score
+    #correction:
+    #  _target_: gen.diffusion.score.Correction
+    #  data_handler : ${datamodule}
+    #  duration : 0.1
+    sde : ${model.sde}
+    nn:
+      boxlength : ${datamodule.distribution.boxlength}
+      

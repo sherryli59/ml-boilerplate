@@ -1,0 +1,2 @@
+_target_ : gen.nn.schnet.SchNet
+max_z : 2

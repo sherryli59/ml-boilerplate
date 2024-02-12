@@ -6,4 +6,5 @@ devices: auto
 
 min_epochs: 1
 max_epochs: 10 
+inference_mode : False
 

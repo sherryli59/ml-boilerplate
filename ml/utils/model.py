@@ -19,11 +19,11 @@ def load_experiment(log_dir: str, checkpoint: str):
     logger.info("\n" + OmegaConf.to_yaml(config))
     # reinitialize model and datamodule
     #model = get_class(config.model._target_)
-    datamodule: LightningDataModule = instantiate(config.datamodule)
+    datamodule: LightningDataModule = instantiate(config.datamodule,_convert_="partial")
     datamodule.setup()
     if "seed" in config:
         seed_everything(config.seed)
-    model:LightningModule = instantiate(config.model)
+    model:LightningModule = instantiate(config.model,_convert_="partial")
     checkpoint_model = torch.load(checkpoint)
     model.load_state_dict(checkpoint_model["state_dict"], strict=False)
     #model = model.load_from_checkpoint(checkpoint)

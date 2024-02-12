@@ -30,11 +30,10 @@ def train(config: DictConfig, model: Optional[LightningModule]=None,
 
     # setup data module
     log.info(f'Instantiating datamodule <{config.datamodule._target_}>')
-    datamodule: LightningDataModule = instantiate(config.datamodule)
-
+    datamodule: LightningDataModule = instantiate(config.datamodule,_convert_="partial")
     # setup model
     log.info(f'Instantiating model <{config.model._target_}>')
-    model: LightningModule = instantiate(config.model)
+    model: LightningModule = instantiate(config.model,_convert_="partial")
 
     # setup logger
     logger: List[Logger] = []
@@ -109,4 +108,4 @@ def train(config: DictConfig, model: Optional[LightningModule]=None,
         f'Best checkpoint path:\n{trainer.checkpoint_callback.best_model_path}')
 
     mlf_logger.experiment.log_param(
-        trainer.checkpoint_callback.best_model_path, "ml-flow/best_model_path", mlf_logger._run_id)
+        mlf_logger._run_id, "ml-flow/best_model_path",trainer.checkpoint_callback.best_model_path )

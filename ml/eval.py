@@ -4,6 +4,7 @@ from typing import Optional
 from pytorch_lightning import LightningModule, LightningDataModule, Trainer
 from pytorch_lightning import seed_everything
 import matplotlib.pyplot as plt
+plt.style.use("my_style")
 from omegaconf import DictConfig
 
 from ml.utils import config_utils
@@ -51,12 +52,10 @@ def eval(config: DictConfig, model: LightningModule, trainer: Trainer, datamodul
     #     logger=trainer.logger,
     # )
     # add your evaluation logic here
-    # result = trainer.test(model=model, datamodule=datamodule)
-    # prob = result[0]["logp"]
-    # np.save("prob_sample.npy",prob.detach().cpu().numpy())
-    print(config.sample)
+    #out = trainer.test(model=model, datamodule=datamodule)
+    # print(config.sample)
     with torch.no_grad():
-        out = model.sample(**config.sample)
+         out = model.sample(**config.sample)
     sample = out["x"]
     np.save("sample.npy",sample.detach().cpu().numpy())
     if "traj" in out:
@@ -66,6 +65,7 @@ def eval(config: DictConfig, model: LightningModule, trainer: Trainer, datamodul
     if "logp" in out:
         prob = out["logp"]
         np.save("prob.npy",prob.detach().cpu().numpy())
+
     ## Sample visualization.
     # sample = sample.clamp(0.0, 1.0)
     # import matplotlib.pyplot as plt
@@ -80,19 +80,7 @@ def eval(config: DictConfig, model: LightningModule, trainer: Trainer, datamodul
     potential = datamodule.distribution.potential(sample)
     np.save("potential.npy",potential.detach().cpu().numpy())
     plot_potential(potential, trainer.logger)
-    # bad_idx = (potential>0).flatten()
-    # init = out["init"]
-    # log_prob = (-init**2/2).sum(dim=(1,2))
-    # log_prob_bad = log_prob[bad_idx]
-    # plt.hist(log_prob_bad.detach().cpu().numpy(),alpha=0.4,bins=20,label="bad")
-    # plt.hist(log_prob.detach().cpu().numpy(),alpha=0.4,bins=50)
-    # plt.legend()
-    # plt.savefig("log_prob.png")
-    # good_idx = (log_prob>-5).flatten()
-    # out_good = model.sample(init=init[good_idx],**config.sample)
-    # sample_good = out_good["x"]
-    # potential_good = datamodule.distribution.potential(sample_good)
-    # plot_potential(potential_good, trainer.logger)
+
 
     
 

@@ -1,8 +1,8 @@
 _target_: ml.datamodules.custom.DataHandler
 
-data_dir: ${data_dir}
-data_path: ${data_dir}/train_data.npy
-test_data_path: ${data_dir}/test_data.npy
+data_path: null
+test_data_path: null
 batch_size: 64
 num_workers: 0
+persistent_workers: False
 pin_memory: False
